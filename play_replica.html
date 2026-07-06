@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>掼蛋牌桌 — 试玩</title>
+<style>
+:root {
+  --green: #1f7a4d; --green-d: #155e3a; --ink: #222; --muted: #777;
+  --line: #e3e3e3; --bg: #f7f8f7; --red: #c0392b; --blue: #2e86de;
+  --gold: #e0a800; --alert-bg: #fdecea; --alert-border: #f5c6c0; --alert-text: #9b2c22;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ink); background: var(--bg); line-height: 1.65;
+}
+a { color: var(--green-d); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── 导航栏 ── */
+nav.top {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--green-d); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+nav.top .wrap {
+  max-width: 980px; margin: 0 auto;
+  display: flex; align-items: center; gap: 18px; padding: 11px 16px;
+}
+nav.top .brand { font-weight: 700; color: #fff; font-size: 17px; }
+nav.top a { color: #dff3e8; }
+nav.top a:hover { color: #fff; text-decoration: none; }
+nav.top .spacer { flex: 1; }
+nav.top .who { color: #bfe6d2; font-size: 14px; }
+
+/* ── 容器 ── */
+.container { max-width: 980px; margin: 0 auto; padding: 24px 16px 60px; }
+
+/* ── 按钮 ── */
+.btn {
+  display: inline-block; background: var(--green); color: #fff;
+  border: none; border-radius: 6px; padding: 9px 18px; font-size: 15px; cursor: pointer;
+}
+.btn:hover { background: var(--green-d); text-decoration: none; color: #fff; }
+.btn.ghost { background: #fff; color: var(--green-d); border: 1px solid var(--green); }
+.btn:disabled { background: #bbb; cursor: not-allowed; }
+
+/* ── 卡片容器 ── */
+.card-box {
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+/* ── 座位 ── */
+.seat {
+  display: inline-block; min-width: 150px;
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; margin: 4px; background: #fff; vertical-align: top;
+}
+.seat.turn { border-color: #e74c3c; border-width: 3px; box-shadow: 0 0 8px rgba(231,76,60,.4); }
+.seat .nm { font-weight: 700; }
+.seat .meta { font-size: 13px; color: #777; }
+.teamA { border-left: 5px solid var(--blue); }
+.teamB { border-left: 5px solid var(--red); }
+.badge {
+  display: inline-block; font-size: 12px; background: var(--green);
+  color: #fff; border-radius: 10px; padding: 1px 8px; margin-left: 6px;
+}
+
+/* ── 牌桌区域 ── */
+.table-area {
+  background: #eaf3ee; border: 1px solid #cfe3d7; border-radius: 10px;
+  padding: 16px; margin: 16px 0; min-height: 90px; text-align: center;
+}
+
+/* ── 扑克牌 ── */
+.gd-card {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 44px; height: 62px; border: 1px solid #ccc; border-radius: 6px;
+  background: #fff; margin: 3px; cursor: default; user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,.12); position: relative; vertical-align: middle;
+  transition: transform .12s, box-shadow .12s;
+}
+.gd-card .r { font-weight: 800; font-size: 17px; line-height: 1.05; }
+.gd-card .s { font-size: 14px; line-height: 1.05; }
+.gd-card.red { color: var(--red); }
+.gd-card.black { color: #222; }
+.gd-card.wild { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.hand .gd-card { cursor: pointer; }
+.hand .gd-card:hover { border-color: var(--green-d); }
+.hand .gd-card.sel {
+  transform: translateY(-12px); border-color: var(--green);
+  box-shadow: 0 5px 10px rgba(31,122,77,.35);
+}
+
+/* ── 状态区 ── */
+.status { font-size: 16px; margin: 8px 0; }
+.controls { margin-top: 14px; }
+#msg { color: var(--red); min-height: 20px; margin-top: 8px; }
+.mini { font-size: 13px; color: #888; }
+
+/* ── 警告框 ── */
+.alert {
+  background: var(--alert-bg); color: var(--alert-text);
+  border: 1px solid var(--alert-border); border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 14px;
+}
+
+/* ── 弹窗 ── */
+.overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.overlay-box {
+  background: #fff; border-radius: 16px; padding: 32px 40px; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,.3); max-width: 400px;
+}
+.overlay-box.win { border-top: 5px solid #27ae60; }
+.overlay-box.loss { border-top: 5px solid var(--red); }
+.overlay-box h2 { font-size: 36px; margin: 0 0 8px; }
+.overlay-box .sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid var(--line); padding: 7px 12px; text-align: left; }
+th { background: #f0f4f1; }
+
+/* ── loading spinner ── */
+.spinner {
+  display: inline-block; width: 18px; height: 18px; border: 2px solid var(--line);
+  border-top-color: var(--green); border-radius: 50%; animation: spin .6s linear infinite;
+  vertical-align: -4px; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ═══ 顶部导航 ═══ -->
+<nav class="top">
+  <div class="wrap">
+    <span class="brand">掼蛋牌桌</span>
+    <span class="spacer"></span>
+    <span class="who" id="nav-user">--</span>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ═══ 大厅 ═══ -->
+<div class="card-box" id="lobby">
+  <h1>掼蛋试玩</h1>
+  <p>选择对局方式：</p>
+  <p>
+    <button class="btn" id="btnVsBot">和电脑立即开局</button>
+    <button class="btn ghost" id="btnVsHuman">匹配真人</button>
+  </p>
+  <p class="mini">匹配真人：等其他在线玩家加入，凑齐 4 人就开局；约 15 秒内没凑齐则自动用电脑补位。和你同桌的可能是真人，也可能是不同强度的电脑。</p>
+  <div id="lobby-msg" style="margin-top:10px"></div>
+</div>
+
+<!-- ═══ 游戏界面 ═══ -->
+<div class="card-box" id="game" style="display:none">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h1 style="margin:0">牌桌</h1>
+    <span id="levelTag" class="badge" style="background:#444">--</span>
+    <span id="meInfo" class="mini">--</span>
+    <span class="spacer" style="flex:1"></span>
+    <button class="btn ghost" id="btnLeave" style="padding:5px 12px">换桌</button>
+  </div>
+
+  <div class="status" id="status"><span class="spinner"></span>正在连接...</div>
+
+  <!-- 对手座位 -->
+  <div id="opps"></div>
+
+  <!-- 桌面出牌区 -->
+  <div class="table-area">
+    <div style="color:#777;font-size:13px" id="tableWho">桌面（等待开局）</div>
+    <div id="tableCards"><span style="color:#999">—</span></div>
+  </div>
+
+  <!-- 我的手牌 -->
+  <div>
+    <div style="color:#777;font-size:13px">你的手牌（点牌选择，可多选）：</div>
+    <div class="hand" id="hand"></div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="controls">
+    <button class="btn" id="btnPlay">出牌</button>
+    <button class="btn ghost" id="btnPass">不要</button>
+    <button class="btn ghost" id="btnClear">清空</button>
+    <button class="btn ghost" id="btnAgain" style="display:none">再来一局</button>
+  </div>
+  <div id="msg"></div>
+</div>
+
+<!-- ═══ 对局结束弹窗 ═══ -->
+<div class="overlay" id="gameOverOverlay" style="display:none">
+  <div class="overlay-box" id="gameOverBox">
+    <h2 id="overlayTitle"></h2>
+    <div class="sub" id="overlaySub"></div>
+    <button class="btn" id="btnOverlayAgain">再来一局</button>
+    <button class="btn ghost" id="btnOverlayClose" style="margin-left:8px">关闭</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ═══ 常量 ═══
+const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+const SUIT = { S: '♠', H: '♥', D: '♦', C: '♣' };
+const POLL_INTERVAL = 1600;  // 轮询间隔(ms)
+const MAX_POLL_ERRORS = 5;    // 连续轮询失败上限
+
+// ═══ 状态 ═══
+let gameId = null;
+let mySeat = null;
+let level = null;
+let selected = new Set();
+let lastHandKey = '';
+let sortedHand = [];
+let myTurn = false;
+let over = false;
+let started = false;
+let timer = null;
+let pollErrors = 0;
+let pendingCards = null;       // 等待服务器确认的出牌
+
+// ═══ API 调用 ═══
+// 通过 Flask 后端代理转发到远程掼蛋服务器
+function api(path, opts) {
+  return fetch('/api/proxy', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: path, opts: opts || {} })
+  }).then(r => r.json());
+}
+
+// 本地 Flask API
+function localApi(path, opts) {
+  return fetch(path, Object.assign({ credentials: 'same-origin' }, opts || {}))
+    .then(r => r.json())
+    .catch(e => { throw new Error('网络连接失败'); });
+}
+
+// ═══ 工具函数 ═══
+function rankIndex(token, lv) {
+  if (token === 'R') return 16;
+  if (token === 'B') return 15;
+  const r = token[1];
+  const seq = RANKS.filter(x => x !== lv).concat([lv]);
+  return seq.indexOf(r);
+}
+
+function disp(token) {
+  if (token === 'R') return { r: '大', s: '王', cls: 'red' };
+  if (token === 'B') return { r: '小', s: '王', cls: 'black' };
+  const su = token[0], r = token[1];
+  return { r: (r === 'T' ? '10' : r), s: SUIT[su], cls: (su === 'H' || su === 'D') ? 'red' : 'black' };
+}
+
+function cardHTML(token, idx, clickable) {
+  const d = disp(token);
+  const wild = (level && token === ('H' + level)) ? ' wild' : '';
+  const sel = clickable && selected.has(idx) ? ' sel' : '';
+  const dataset = clickable ? (' data-idx="' + idx + '"') : '';
+  return '<div class="gd-card ' + d.cls + wild + sel + '"' + dataset +
+    '><span class="r">' + d.r + '</span><span class="s">' + d.s + '</span></div>';
+}
+
+// ═══ 按钮启用/禁用 ═══
+function setEnabled(on) {
+  document.getElementById('btnPlay').disabled = !on;
+  document.getElementById('btnPass').disabled = !on;
+  document.getElementById('btnClear').disabled = !on;
+}
+
+// ═══ 绑定手牌点击 ═══
+function bindCards() {
+  document.querySelectorAll('#hand .gd-card').forEach(el => {
+    el.onclick = () => {
+      if (!myTurn || over) return;
+      const i = parseInt(el.dataset.idx);
+      if (selected.has(i)) { selected.delete(i); el.classList.remove('sel'); }
+      else { selected.add(i); el.classList.add('sel'); }
+      updatePassButton();
+    };
+  });
+}
+
+// ═══ Pass按钮状态更新 ── 领出时不能pass ═══
+function updatePassButton() {
+  // 只有在有桌面出牌时才允许pass
+  // 注意：render中会设置该状态
+}
+
+// ═══ 错误消息显示 ═══
+function showMsg(text, isError) {
+  const el = document.getElementById('msg');
+  el.textContent = text || '';
+  el.style.color = isError ? 'var(--red)' : '#777';
+}
+
+function showStatus(text, isError) {
+  const el = document.getElementById('status');
+  el.innerHTML = text;
+  if (isError) el.style.color = 'var(--red)';
+  else el.style.color = '';
+}
+
+function showLobbyMsg(text, isError) {
+  const el = document.getElementById('lobby-msg');
+  el.textContent = text || '';
+  el.style.color = isError ? 'var(--red)' : '#777';
+}
+
+// ═══ 状态重置 ═══
+function resetState() {
+  gameId = null; mySeat = null; level = null;
+  selected.clear(); lastHandKey = ''; sortedHand = [];
+  myTurn = false; over = false; started = false; pollErrors = 0; pendingCards = null;
+}
+
+// ═══ 渲染：等待开局 ═══
+function renderWaiting(st) {
+  const names = (st.seats || []).filter(Boolean);
+  const n = names.length;
+  document.getElementById('levelTag').textContent = '';
+  document.getElementById('opps').innerHTML = '';
+  document.getElementById('hand').innerHTML = '';
+  document.getElementById('tableCards').innerHTML = '<span style="color:#999">—</span>';
+  document.getElementById('tableWho').textContent = '等待开局';
+  setEnabled(false);
+  document.getElementById('btnAgain').style.display = 'none';
+
+  const t = (st.left_time != null) ? st.left_time : '';
+  showStatus(
+    '已入座 ' + n + '/4：' + names.join('、') +
+    '<br><span class="mini">等待玩家加入… 约 ' + t + ' 秒后用电脑补位</span>'
+  );
+}
+
+// ═══ 渲染：游戏中 ═══
+function render(st) {
+  level = st.level;
+  over = !!st.completed;
+
+  // 级牌标签
+  document.getElementById('levelTag').textContent = level
+    ? ('级牌 ' + (level === 'T' ? '10' : level) + '  逢人配 ♥' + (level === 'T' ? '10' : level))
+    : '--';
+
+  // 个人信息
+  const names = st.seats || [];
+  const counts = st.hand_counts || [];
+  const rank = st.ranking || [];
+  document.getElementById('meInfo').textContent = (mySeat != null)
+    ? ('你是 玩家' + (mySeat + 1) + '（' + (mySeat % 2 === 0 ? 'A' : 'B') + '队）')
+    : '--';
+
+  // 对手座位
+  let html = '';
+  for (let s = 0; s < 4; s++) {
+    if (s === mySeat) continue;
+    const team = (s % 2 === 0) ? 'teamA' : 'teamB';
+    const isTurn = (st.current_turn === s) && !over;
+    const done = rank.indexOf(names[s]);
+    const badge = done >= 0 ? ('<span class="badge">第' + (done + 1) + '名</span>') : '';
+    html += '<div class="seat ' + team + (isTurn ? ' turn' : '') + '">' +
+      '<div class="nm">' + (names[s] || '?') + badge + '</div>' +
+      '<div class="meta">座位' + s + (s % 2 === 0 ? '（A队）' : '（B队）') +
+      ' · 剩 ' + (counts[s] != null ? counts[s] : '?') + ' 张</div></div>';
+  }
+  document.getElementById('opps').innerHTML = html;
+
+  // 桌面出牌
+  const lp = st.last_play || [];
+  const lpName = (st.last_player != null && names[st.last_player]) ? names[st.last_player] : null;
+  document.getElementById('tableWho').textContent = lp.length
+    ? ('桌面（' + (lpName || '?') + ' 打出）')
+    : '桌面（空，等待领出）';
+  document.getElementById('tableCards').innerHTML = lp.map(t => cardHTML(t, -1, false)).join('')
+    || '<span style="color:#999">—</span>';
+
+  // 手牌
+  const hand = (st.your_hand || []).slice();
+  hand.sort((a, b) => rankIndex(a, level) - rankIndex(b, level));
+  const key = hand.join(',');
+  if (key !== lastHandKey) {
+    selected.clear();
+    lastHandKey = key;
+  }
+  sortedHand = hand;
+  document.getElementById('hand').innerHTML = hand.map((t, i) => cardHTML(t, i, true)).join('')
+    || '<span style="color:#999">（已出完）</span>';
+  bindCards();
+
+  // 回合状态
+  myTurn = !!st.is_your_turn;
+  const lpLen = (st.last_play || []).length;
+  document.getElementById('btnAgain').style.display = over ? 'inline-block' : 'none';
+
+  if (over) {
+    // ── 对局结束 ──
+    const sc = st.scores || {};
+    const mine = (mySeat % 2 === 0) ? '0' : '1';
+    const win = (st.winner_team != null && String(st.winner_team) === mine);
+
+    showStatus(
+      '本局结束 · 名次：' + (rank.join(' → ') || '?') +
+      ' · 你的队伍得分 ' + (sc[mine] != null ? sc[mine] : '?') +
+      (win ? ' 赢了！' : '')
+    );
+    setEnabled(false);
+    showMsg('');
+
+    // 弹窗
+    showGameOver(win, st);
+  } else if (myTurn) {
+    showStatus(
+      '<b style="color:#1f7a4d">轮到你出牌</b>' +
+      (lpLen ? '（要压过桌面，或点"不要"）' : '（你领出，选牌后点"出牌"）')
+    );
+    setEnabled(true);
+    document.getElementById('btnPass').disabled = (lpLen === 0);  // 领出时不能pass
+  } else {
+    showStatus('等待 ' + (st.current_player || '对手') + ' 出牌…');
+    setEnabled(false);
+  }
+}
+
+// ═══ 对局结束弹窗 ═══
+function showGameOver(win, st) {
+  const box = document.getElementById('gameOverBox');
+  box.className = 'overlay-box ' + (win ? 'win' : 'loss');
+  document.getElementById('overlayTitle').textContent = win ? '胜利！' : '失败';
+  const sc = st.scores || {};
+  const mine = (mySeat % 2 === 0) ? '0' : '1';
+  const score = (sc[mine] != null) ? sc[mine] : '?';
+  document.getElementById('overlaySub').textContent =
+    '队伍得分: ' + score + ' | 总出牌 ' + (st.total_moves || 0) + ' 步';
+  document.getElementById('gameOverOverlay').style.display = 'flex';
+}
+
+function hideGameOver() {
+  document.getElementById('gameOverOverlay').style.display = 'none';
+}
+
+// ═══ 轮询 ═══
+async function poll() {
+  // 不依赖 gameId（Flask后端不通过 response 返回），
+  // 改为通过 status 中的 running/completed 判断是否停止轮询
+  try {
+    const st = await localApi('/api/status');
+
+    // ── 服务端返回错误 ──
+    if (st.error && !st.is_success) {
+      pollErrors++;
+      showMsg('服务端错误: ' + (st.message || st.error), true);
+      if (pollErrors >= MAX_POLL_ERRORS) {
+        showStatus('服务不可用，请返回大厅重试', true);
+        stopPoll();
+        setEnabled(false);
+      }
+      return;
+    }
+
+    // ── 连接恢复 ──
+    if (pollErrors > 0) {
+      pollErrors = 0;
+      showMsg('');
+    }
+
+    // ── 检测状态变化 ──
+    const wasCompleted = over;
+    started = !!st.started;
+
+    if (!started && !st.completed) {
+      // waiting state
+      renderWaiting(st);
+      showMsg('');
+    } else {
+      if (mySeat == null && st.your_seat != null) {
+        mySeat = st.your_seat;
+      }
+      render(st);
+    }
+
+    // ── 刚结束 → 刷新统计 ──
+    if (!wasCompleted && st.completed) {
+      showMsg('');
+    }
+
+    // ── 刚轮到我们，清除之前的错误 ──
+    if (st.is_your_turn && !myTurn) {
+      showMsg('');
+    }
+
+    // 更新导航用户名
+    if (st.seats && st.seats.length > 0 && mySeat != null && st.seats[mySeat]) {
+      document.getElementById('nav-user').textContent = '你好，' + st.seats[mySeat];
+    }
+
+  } catch (e) {
+    // ── 网络错误 ──
+    pollErrors++;
+    if (pollErrors === 1) {
+      showMsg('连接服务器失败，正在重试...', true);
+    }
+    if (pollErrors >= MAX_POLL_ERRORS) {
+      showStatus('无法连接服务器，请检查网络后返回大厅重试', true);
+      stopPoll();
+      setEnabled(false);
+      showMsg('连接中断 (' + pollErrors + '/' + MAX_POLL_ERRORS + ') ，已停止轮询', true);
+    }
+  }
+
+  if (!over) {
+    timer = setTimeout(poll, POLL_INTERVAL);
+  }
+}
+
+function stopPoll() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+}
+
+// ═══ 出牌 ═══
+async function doPlay(cards) {
+  showMsg('');
+
+  // ── 前端校验：领出时不能pass ──
+  if (!cards || cards.length === 0) {
+    // pass 是允许的（只要不是领出，按钮已经禁用了）
+  }
+
+  try {
+    // 通过 Flask 后端提交出牌
+    const r = await localApi('/api/manual_play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coord: cards })
+    });
+
+    if (!r || !r.ok) {
+      showMsg('出牌失败: ' + ((r && r.message) || '服务器无响应'), true);
+      return;
+    }
+
+    // 出牌成功 → 清空选择，立即轮询一次
+    selected.clear();
+    pendingCards = null;
+    showMsg('');
+    poll();
+
+  } catch (e) {
+    showMsg('提交出牌时网络错误，请重试', true);
+  }
+}
+
+// ═══ 大厅 → 游戏流程 ═══
+function showLobby() {
+  stopPoll();
+  resetState();
+
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('lobby').style.display = '';
+  document.getElementById('gameOverOverlay').style.display = 'none';
+  showLobbyMsg('');
+  showMsg('');
+}
+
+async function startGame(humans) {
+  // ── 切换到游戏界面 ──
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('game').style.display = '';
+  document.getElementById('gameOverOverlay').style.display = 'none';
+  showStatus('<span class="spinner"></span>正在入座...');
+  showMsg('');
+  showLobbyMsg('');
+
+  // ── 重置状态 ──
+  resetState();
+
+  try {
+    // 1. 启动对局（注意：/api/start 会重置 manual_mode，必须在 start 之后设置）
+    const r = await localApi('/api/start', { method: 'POST' });
+
+    if (!r || !r.ok) {
+      showStatus('启动失败: ' + ((r && r.message) || '服务器无响应'), true);
+      showLobbyMsg('启动失败，请重试', true);
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('lobby').style.display = '';
+      return;
+    }
+
+    showStatus('<span class="spinner"></span>等待发牌...');
+    showMsg('');
+    pollErrors = 0;
+
+    // 2. 设置手动模式（必须在 /api/start 之后，因为 start 会重置 manual_mode）
+    await localApi('/api/manual_mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'manual' })
+    });
+
+    // 3. 开始轮询
+    poll();
+
+  } catch (e) {
+    showStatus('连接服务器失败，请检查 Flask 是否在 localhost:8080 运行', true);
+    showLobbyMsg('网络错误: ' + (e.message || '未知'), true);
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('lobby').style.display = '';
+  }
+}
+
+// ═══ 事件绑定 ═══
+document.getElementById('btnVsBot').onclick = () => startGame(false);
+document.getElementById('btnVsHuman').onclick = () => startGame(true);
+document.getElementById('btnPlay').onclick = () => {
+  const cards = [...selected].map(i => sortedHand[i]);
+  if (!cards.length) {
+    showMsg('请先选择要出的牌', true);
+    return;
+  }
+  doPlay(cards);
+};
+document.getElementById('btnPass').onclick = () => doPlay([]);
+document.getElementById('btnClear').onclick = () => {
+  selected.clear();
+  poll(); // 重新渲染清空选择
+};
+document.getElementById('btnAgain').onclick = () => {
+  hideGameOver();
+  showLobby();
+};
+document.getElementById('btnLeave').onclick = () => showLobby();
+document.getElementById('btnOverlayAgain').onclick = () => {
+  hideGameOver();
+  showLobby();
+  startGame(false);
+};
+document.getElementById('btnOverlayClose').onclick = () => {
+  hideGameOver();
+  showLobby();
+};
+
+// ═══ 初始化 ═══
+document.getElementById('nav-user').textContent = '--';
+</script>
+
+</body>
+</html>
