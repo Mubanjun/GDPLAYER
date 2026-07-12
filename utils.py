@@ -381,6 +381,138 @@ def get_config_file():
     return _os.path.join(_BASE_DIR, "config.cfg")
 
 
+# ═══════════════════════════════════════════════════════════
+#  默认配置（配置文件丢失时用此生成新配置）
+# ═══════════════════════════════════════════════════════════
+_DEFAULT_CONFIG = {
+    # ── 服务器连接 ──
+    "address":             "http://183.175.14.145:8004",
+    "user":                "0241123590",
+    "password":            "123590",
+    "password_encrypted":  "",
+    "humans":              "0",
+    "rsa_e":               "65537",
+    "rsa_n":               "135261828916791946705313569652794581721330948863485438876915508683244111694485850733278569559191167660149469895899348939039437830613284874764820878002628686548956779897196112828969255650312573935871059275664474562666268163936821302832645284397530568872432109324825205567091066297960733513602409443790146687029",
+    # ── 行为参数 ──
+    "sleep_min":           "0",
+    "sleep_max":           "15",
+    "sleep_after_play":    "1",
+    "sleep_on_reject":     "3",
+    "sleep_between_games": "5",
+    "game_timeout_minutes": "5",
+    "port":                "8080",
+    "FAKE_FAME":           "0",
+    # ── 打分权重 ──
+    "W_CLEAR":             "10000.0",
+    "W_CONTROL":           "20.0",
+    "W_B":                 "14.0",
+    "W_WILD":              "10.0",
+    "W_LEVEL":             "8.0",
+    "W_BOMB_BASE_4":       "10",
+    "W_BOMB_BASE_5":       "20",
+    "W_BOMB_BASE_6":       "35",
+    "W_BOMB_BASE_7":       "55",
+    "W_BOMB_BASE_8":       "80",
+    "W_QUAD_KING":         "55.0",
+    "W_ROUND_PENALTY":     "15.0",
+    "W_SMALL_SINGLE":      "6.0",
+    "W_TEAMMATE_PASS":     "55.0",
+    "W_TEAMMATE_PLAY":     "-25.0",
+    "W_OPPONENT_BOMB":     "22.5",
+    "W_UNNECESSARY_BOMB":  "-12.0",
+    "W_BIG_SINGLE":        "3.6",
+    "W_PAIR_PENALTY":      "1.0",
+    "W_TIGHT_FOLLOW":      "4.6",
+    "W_PLAY_BONUS":        "82.0",
+    "W_PASS_PENALTY":      "102.0",
+    "W_REM_ISOLATE":       "-9.8",
+    "W_REM_PAIR":          "5.0",
+    "W_REM_TRIPLE":        "12.0",
+    "W_REM_4BOMB":         "15",
+    "W_REM_5BOMB":         "28",
+    "W_REM_6BOMB":         "45",
+    "W_REM_7BOMB":         "65",
+    "W_OPP_URGENCY_BONUS": "48.0",
+    "W_OPP_URGENCY_PASS":  "66.0",
+    "W_BIG_CARD_EARLY":    "-30.0",
+    "W_SMALL_JOKER_EARLY": "-20.0",
+    "W_AGGRESSION_SHIFT":  "32.0",
+    "W_HAND_DECLINE_RATE": "40.0",
+}
+
+
+def get_external_config_path():
+    """返回外部目录的配置文件路径（GDPLAYER 的父目录）。"""
+    parent = _os.path.dirname(_BASE_DIR)
+    return _os.path.join(parent, "config.cfg")
+
+
+def _write_default_config(filepath):
+    """将默认配置写入指定路径。"""
+    lines = [
+        "# ═══════════════════════════════════════════════════════════",
+        "#  config.cfg — 自动生成的默认配置",
+        "#  修改本文件后重启程序生效",
+        "# ═══════════════════════════════════════════════════════════",
+        "",
+    ]
+    for k, v in _DEFAULT_CONFIG.items():
+        lines.append(f'{k}="{v}"')
+    lines.append("")
+    content = "\n".join(lines)
+    tmp = filepath + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(content)
+    _os.replace(tmp, filepath)
+
+
+def ensure_config_file():
+    """确保配置文件存在。丢失时用默认值生成，并复制到外部目录。
+
+    策略:
+      1. 内部 config.cfg 存在 → 正常使用
+      2. 内部不存在但外部存在 → 从外部复制到内部
+      3. 都不存在 → 用默认值生成内部配置, 并复制到外部
+    """
+    internal = get_config_file()
+    external = get_external_config_path()
+
+    if _os.path.exists(internal):
+        # 内部配置存在，确保外部也有一份副本（首次运行时生成）
+        if not _os.path.exists(external):
+            try:
+                import shutil as _shutil
+                _shutil.copy2(internal, external)
+            except OSError:
+                pass
+        return internal
+
+    # 内部不存在
+    if _os.path.exists(external):
+        # 外部有配置 → 复制到内部
+        try:
+            import shutil as _shutil
+            _shutil.copy2(external, internal)
+            return internal
+        except OSError:
+            pass  # 复制失败则走默认值路径
+
+    # 都不存在 → 生成默认配置
+    try:
+        _write_default_config(internal)
+    except OSError:
+        return internal  # 写入失败也返回路径，parse_config 会返回空 dict
+
+    # 复制到外部目录
+    try:
+        import shutil as _shutil
+        _shutil.copy2(internal, external)
+    except OSError:
+        pass
+
+    return internal
+
+
 def get_temp_dir():
     return _os.path.join(_BASE_DIR, "temp")
 
@@ -458,6 +590,8 @@ def parse_config(filepath: str = None) -> dict:
     import re as _re
     if filepath is None:
         filepath = get_config_file()
+        # 配置文件丢失时自动用默认值生成，并复制到外部目录
+        ensure_config_file()
     # 读取前先校验文件完整性
     validate_config_file(filepath)
     config = {}
@@ -489,7 +623,7 @@ def load_stats():
         try:
             with open(p, "r", encoding="utf-8") as f:
                 return _json.load(f)
-        except (json.JSONDecodeError, ValueError):
+        except (_json.JSONDecodeError, ValueError):
             # 文件正在写入导致读取不完整，返回默认值
             return {"total": 0, "wins": 0, "losses": 0, "games": []}
     return {"total": 0, "wins": 0, "losses": 0, "games": []}
