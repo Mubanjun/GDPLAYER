@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>掼蛋游戏服务器 API 文档</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d29;
+    --border: #2a2f3e;
+    --text: #e4e6eb;
+    --text-dim: #8b8fa3;
+    --accent: #5b9fff;
+    --green: #4ade80;
+    --red: #f87171;
+    --orange: #fbbf24;
+    --purple: #c084fc;
+    --cyan: #22d3ee;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; line-height: 1.6; padding: 0; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+  h1 .ver { color: var(--accent); font-size: 16px; font-weight: 400; margin-left: 12px; }
+  .subtitle { color: var(--text-dim); font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 22px; font-weight: 600; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--cyan); }
+  h3 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; color: var(--accent); }
+  h4 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .endpoint { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .endpoint-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .method { padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+  .method.GET { background: #1a4d2e; color: var(--green); }
+  .method.POST { background: #4a1a2e; color: var(--red); }
+  .method.PAGE { background: #3d3520; color: var(--orange); }
+  .path { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 15px; color: var(--text); word-break: break-all; }
+  .desc { color: var(--text-dim); font-size: 14px; margin-bottom: 16px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #232838; color: var(--text-dim); font-weight: 600; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td:first-child { font-family: 'Cascadia Code', monospace; color: var(--accent); white-space: nowrap; }
+  td .type { color: var(--purple); font-size: 12px; }
+  td .opt { color: var(--text-dim); font-size: 11px; margin-left: 4px; }
+
+  pre { background: #0d0f14; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0; font-size: 13px; line-height: 1.5; }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .inline-code { background: #232838; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--cyan); }
+
+  .note { background: #1a1d2e; border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; }
+  .note.warn { border-left-color: var(--orange); background: #2d2a1a; }
+  .note.danger { border-left-color: var(--red); background: #2d1a1a; }
+
+  .field-table td:nth-child(2) { color: var(--green); font-family: 'Cascadia Code', monospace; font-size: 12px; }
+  .field-table td:nth-child(3) { color: var(--text-dim); }
+
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 4px 0; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: 14px; }
+  .toc a:hover { text-decoration: underline; }
+  .toc .sub { padding-left: 20px; }
+  .toc .sub a { color: var(--text-dim); font-size: 13px; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .badge.req { background: #4a1a2e; color: var(--red); }
+  .badge.opt { background: #1a3d2e; color: var(--green); }
+
+  .protocol-flow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
+  .flow-step { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px; }
+  .flow-arrow { color: var(--text-dim); font-size: 18px; }
+  .flow-step.highlight { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>掼蛋游戏服务器 API 文档 <span class="ver">v1.0</span></h1>
+<div class="subtitle">
+  服务器地址：<code style="color:var(--cyan)">http://183.175.14.145:8004</code> &nbsp;|&nbsp;
+  基于 GUANDANPRO 引擎源码逆向整理 &nbsp;|&nbsp; 更新日期：2026-07-06
+</div>
+
+<!-- ════════ 目录 ════════ -->
+<div class="toc">
+  <h3 style="margin-top:0">目录</h3>
+  <ul>
+    <li><a href="#overview">1. 总览与认证机制</a></li>
+    <li class="sub"><a href="#rsa">1.1 RSA 密码加密</a></li>
+    <li class="sub"><a href="#auth">1.2 鉴权参数</a></li>
+    <li><a href="#join">2. 加入对局 — POST /join_game</a></li>
+    <li><a href="#check">3. 查询对局状态 — GET /check_game</a></li>
+    <li class="sub"><a href="#check-fields">3.1 返回字段详解</a></li>
+    <li class="sub"><a href="#teams">3.2 teams 字段格式</a></li>
+    <li class="sub"><a href="#trick">3.3 trick_history 结构</a></li>
+    <li><a href="#play">4. 出牌 — GET /play_game</a></li>
+    <li class="sub"><a href="#play-coord">4.1 coord 出牌格式</a></li>
+    <li class="sub"><a href="#play-errors">4.2 错误分类与处理策略</a></li>
+    <li><a href="#rank">5. 排行榜 — GET /rank</a></li>
+    <li><a href="#lifecycle">6. 对局生命周期</a></li>
+    <li><a href="#card-format">7. 牌面编码规范</a></li>
+    <li><a href="#errors">8. 错误处理参考表</a></li>
+  </ul>
+</div>
+
+<!-- ════════ 1. 总览 ════════ -->
+<h2 id="overview">1. 总览与认证机制</h2>
+
+<p>掼蛋游戏服务器提供 4 个核心 HTTP 接口，覆盖完整的对局生命周期：</p>
+
+<table>
+  <tr><th>接口</th><th>方法</th><th>用途</th><th>调用时机</th></tr>
+  <tr><td>/join_game</td><td>POST</td><td>加入对局，获取 game_id</td><td>每局开始</td></tr>
+  <tr><td>/check_game/{id}/</td><td>GET</td><td>轮询对局状态</td><td>每 1-5 秒</td></tr>
+  <tr><td>/play_game/{id}/</td><td>GET</td><td>提交出牌</td><td>我方回合</td></tr>
+  <tr><td>/rank</td><td>GET (HTML)</td><td>查看排行榜</td><td>按需</td></tr>
+</table>
+
+<div class="note">
+  <strong>注意：</strong>同一用户的 <code>join_game</code> 总是返回同一个活跃 <code>game_id</code>（持久会话），而非创建新对局。服务端维护用户会话，多次调用 join 等同于重连。
+</div>
+
+<h3 id="rsa">1.1 RSA 密码加密</h3>
+<p>密码不可明文传输，必须先经 RSA 公钥加密。客户端使用以下参数：</p>
+<table>
+  <tr><th>参数</th><th>值</th><th>说明</th></tr>
+  <tr><td>rsa_e</td><td>65537</td><td>公钥指数</td></tr>
+  <tr><td>rsa_n</td><td>13526182891679194670531...（2048位）</td><td>模数（见 config.cfg）</td></tr>
+</table>
+
+<h4>加密算法</h4>
+<pre><code># Python 实现（源自 engine.py）
+random_part = random_string(8)              # 8位随机字母+数字
+plaintext = f"{password}\0{random_part}"    # 密码 + \0 + 随机串
+plaintext_bytes = plaintext.encode("utf-8")
+password_int = int.from_bytes(plaintext_bytes, "big")
+if password_int >= n:
+    password_int = password_int % (n - 1)   # 防溢出
+encrypted_int = pow(password_int, e, n)     # RSA 加密
+rsa_pass = format(encrypted_int, "x")       # 输出十六进制字符串</code></pre>
+
+<div class="note warn">
+  <strong>关键点：</strong>每次加密使用不同的随机串，因此同一密码每次加密结果不同。服务端容忍这种随机性（随机串作为 padding 处理）。
+</div>
+
+<h3 id="auth">1.2 鉴权参数</h3>
+<p>所有需要鉴权的接口均通过 URL Query 参数传递身份：</p>
+<pre><code>?user={user}&amp;password={rsa_pass}</code></pre>
+<table>
+  <tr><th>参数</th><th>类型</th><th>说明</th></tr>
+  <tr><td>user</td><td>string</td><td>用户名（学号格式，如 <code>0241123590</code>）</td></tr>
+  <tr><td>password</td><td>string</td><td>RSA 加密后的十六进制字符串</td></tr>
+</table>
+
+<!-- ════════ 2. join_game ════════ -->
+<h2 id="join">2. 加入对局 — POST /join_game</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method POST">POST</span>
+    <span class="path">/join_game?user={user}&amp;password={rsa_pass}&amp;humans={0|1}</span>
+  </div>
+  <p class="desc">加入或重连对局，返回当前活跃的 game_id。同一用户多次调用返回同一会话。</p>
+
+  <h4>请求参数</h4>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td>user</td><td>string</td><td><span class="badge req">必填</span></td><td>用户名</td></tr>
+    <tr><td>password</td><td>string</td><td><span class="badge req">必填</span></td><td>RSA 加密密码</td></tr>
+    <tr><td>humans</td><td>0 | 1</td><td><span class="badge opt">可选</span></td><td>是否人类模式（1=人类手动出牌，0=AI 自动）。默认 0</td></tr>
+  </table>
+
+  <h4>请求示例</h4>
+  <pre><code>POST http://183.175.14.145:8004/join_game?user=0241123590&amp;password=a1b2c3...&amp;humans=0</code></pre>
+
+  <h4>成功响应</h4>
+  <pre><code>{
+  "game_id": 18142
+}</code></pre>
+  <table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td>game_id</td><td>int</td><td>对局唯一标识，后续接口均需此 ID</td></tr>
+  </table>
+
+  <h4>失败情况</h4>
+  <table>
+    <tr><th>场景</th><th>表现</th></tr>
+    <tr><td>密码错误</td><td>HTTP 非 200 或返回错误 JSON</td></tr>
+    <tr><td>服务器无响应</td><td>连接超时（建议重试 6 次，每次间隔 2s）</td></tr>
+    <tr><td>返回无 game_id</td><td>JSON 中无 game_id 字段 → 会话异常</td></tr>
+  </table>
+
+  <div class="note">
+    <strong>调用建议：</strong>join 后服务端会重置 check_game 的计时器。若正在对局中，重复 join 不会中断当前对局，但可能影响服务端超时计算。
+  </div>
+</div>
+
+<!-- ════════ 3. check_game ════════ -->
+<h2 id="check">3. 查询对局状态 — GET /check_game</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method GET">GET</span>
+    <span class="path">/check_game/{game_id}/?user={user}&amp;password={rsa_pass}</span>
+  </div>
+  <p class="desc">轮询对局完整状态。这是最核心的接口，包含手牌、回合、桌面牌等全部信息。建议每 1-5 秒调用一次。</p>
+
+  <h4>路径参数</h4>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>说明</th></tr>
+    <tr><td>game_id</td><td>int</td><td>join_game 返回的对局 ID</td></tr>
+  </table>
+
+  <h4>Query 参数</h4>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td>user</td><td>string</td><td><span class="badge req">必填</span></td><td>用户名</td></tr>
+    <tr><td>password</td><td>string</td><td><span class="badge req">必填</span></td><td>RSA 加密密码</td></tr>
+  </table>
+
+  <h4>请求示例</h4>
+  <pre><code>GET http://183.175.14.145:8004/check_game/18142/?user=0241123590&amp;password=a1b2c3...</code></pre>
+
+  <h3 id="check-fields">3.1 返回字段详解</h3>
+  <pre><code>{
+  "completed": false,
+  "started": true,
+  "level": "9",
+  "your_seat": 0,
+  "your_team": 0,
+  "is_your_turn": true,
+  "your_hand": ["S3","D3","H5","S5","D7","C9","HK","SK","CA","DA","R","B"],
+  "last_play": ["S8"],
+  "last_player": 2,
+  "current_turn": 0,
+  "hand_counts": [12, 8, 10, 12],
+  "seats": ["玩家1","玩家2","玩家3","玩家4"],
+  "teams": [0, 1, 0, 1],
+  "ranking": [],
+  "winner_team": -1,
+  "trick_history": [[3,["H4"]],[0,["S6"]],[1,["H8"]],[2,["SA"]],[3,[]]]
+}</code></pre>
+
+  <table class="field-table">
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td>completed</td><td>bool</td><td>对局是否已结束</td></tr>
+    <tr><td>started</td><td>bool</td><td>对局是否已开始（4人就绪）。<strong>信任此字段判断开局</strong></td></tr>
+    <tr><td>level</td><td>string</td><td>当前级牌（"2"~"A"）。红桃级牌为逢人配（Wild）</td></tr>
+    <tr><td>your_seat</td><td>int (0-3)</td><td>你的座位号</td></tr>
+    <tr><td>your_team</td><td>int (0-1)</td><td>你的队伍号</td></tr>
+    <tr><td>is_your_turn</td><td>bool</td><td>是否轮到你出牌</td></tr>
+    <tr><td>your_hand</td><td>string[]</td><td>你的手牌列表（牌面编码见第7节）</td></tr>
+    <tr><td>last_play</td><td>string[]</td><td>桌面最后有效出牌。空数组=自由领出</td></tr>
+    <tr><td>last_player</td><td>int (-1~3)</td><td>最后出牌者的座位号。-1=无人出过牌</td></tr>
+    <tr><td>current_turn</td><td>int (-1~3)</td><td>当前轮到的座位号</td></tr>
+    <tr><td>hand_counts</td><td>int[4]</td><td>4位玩家剩余手牌数。初始 27 张</td></tr>
+    <tr><td>seats</td><td>string[4]</td><td>4位玩家显示名</td></tr>
+    <tr><td>teams</td><td>list | dict</td><td>队伍信息（见 3.2）</td></tr>
+    <tr><td>ranking</td><td>string[]</td><td>名次列表（对局结束后填充，如 ["玩家4","玩家1","玩家3","玩家2"]）</td></tr>
+    <tr><td>winner_team</td><td>int (-1|0|1)</td><td>获胜队伍。-1=未结束</td></tr>
+    <tr><td>trick_history</td><td>array</td><td>本局出牌历史（见 3.3）</td></tr>
+  </table>
+
+  <div class="note warn">
+    <strong>0 值陷阱：</strong><code>your_seat=0</code>、<code>your_team=0</code>、<code>last_player=0</code> 均是合法值。解析时必须用 <code>is not None</code> 判断，不可用 <code>or -1</code>（Python 中 0 为 falsy）。
+  </div>
+
+  <h3 id="teams">3.2 teams 字段格式</h3>
+  <p>teams 可能返回两种格式，客户端需兼容处理：</p>
+
+  <h4>格式一：列表（常见）</h4>
+  <pre><code>"teams": [0, 1, 0, 1]   // 座位 0,2 为队 0；座位 1,3 为队 1</code></pre>
+  <div class="note">若返回 <code>[0, 0, 0, 0]</code> 表示服务端未设置，应按标准掼蛋座位推算：<code>[0, 1, 0, 1]</code>（对角为队友）。</div>
+
+  <h4>格式二：字典</h4>
+  <pre><code>"teams": {
+  "team0": ["玩家1", "玩家3"],
+  "team1": ["玩家2", "玩家4"]
+}</code></pre>
+  <p>需结合 <code>seats</code> 字段将成员名映射回座位索引。</p>
+
+  <h3 id="trick">3.3 trick_history 结构</h3>
+  <p>出牌历史为二维数组，每个元素 <code>[seat, cards]</code>：</p>
+  <pre><code>"trick_history": [
+  [3, ["H4"]],     // 座位3 出了 红桃4
+  [0, ["S6"]],     // 座位0 出了 黑桃6
+  [1, ["H8"]],     // 座位1 出了 红桃8
+  [2, ["SA"]],     // 座位2 出了 黑桃A
+  [3, []],         // 座位3 pass
+  [0, []]          // 座位0 pass
+]</code></pre>
+  <p><code>cards</code> 为空数组表示 pass。可通过遍历 trick_history 的逆序推导 last_play（当 last_play 字段不准确时）。</p>
+</div>
+
+<!-- ════════ 4. play_game ════════ -->
+<h2 id="play">4. 出牌 — GET /play_game</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method GET">GET</span>
+    <span class="path">/play_game/{game_id}/?user={user}&amp;password={rsa_pass}&amp;coord={json}</span>
+  </div>
+  <p class="desc">提交出牌决策。注意此接口使用 <strong>GET</strong> 方法，出牌内容通过 query 参数传递。</p>
+
+  <h4>路径参数</h4>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>说明</th></tr>
+    <tr><td>game_id</td><td>int</td><td>对局 ID</td></tr>
+  </table>
+
+  <h4>Query 参数</h4>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td>user</td><td>string</td><td><span class="badge req">必填</span></td><td>用户名</td></tr>
+    <tr><td>password</td><td>string</td><td><span class="badge req">必填</span></td><td>RSA 加密密码</td></tr>
+    <tr><td>coord</td><td>string (JSON)</td><td><span class="badge req">必填</span></td><td>出牌内容，JSON 编码的牌面数组</td></tr>
+  </table>
+
+  <h3 id="play-coord">4.1 coord 出牌格式</h3>
+  <p><code>coord</code> 是 JSON 编码的字符串，内容为牌面数组：</p>
+
+  <table>
+    <tr><th>场景</th><th>coord 值</th><th>说明</th></tr>
+    <tr><td>出单张</td><td><code>["S8"]</code></td><td>出黑桃8</td></tr>
+    <tr><td>出对子</td><td><code>["S8","H8"]</code></td><td>出一对8</td></tr>
+    <tr><td>出三带二</td><td><code>["S8","H8","D8","C4","S4"]</code></td><td>三张8带一对4</td></tr>
+    <tr><td>出炸弹</td><td><code>["S8","H8","D8","C8"]</code></td><td>四张8炸弹</td></tr>
+    <tr><td>出大王炸</td><td><code>["B","B","R","R"]</code></td><td>四大天王（最强炸弹）</td></tr>
+    <tr><td>pass</td><td><code>[]</code></td><td>空数组=过牌</td></tr>
+  </table>
+
+  <h4>完整请求示例</h4>
+  <pre><code>GET http://183.175.14.145:8004/play_game/18142/?user=0241123590&amp;password=a1b2c3...&amp;coord=%5B%22S8%22%5D
+
+# coord 原始值: ["S8"]
+# URL 编码后:   %5B%22S8%22%5D</code></pre>
+
+  <div class="note warn">
+    <strong>领出时不可 pass：</strong>当 <code>last_play</code> 为空（自由领出）时，<code>coord=[]</code> 会被服务端拒绝。必须出至少一张牌。
+  </div>
+
+  <h4>成功响应</h4>
+  <pre><code>{
+  "is_success": true
+}</code></pre>
+
+  <h4>失败响应</h4>
+  <pre><code>{
+  "is_success": false,
+  "error": "cannot beat"        // 或 "message": "..."
+}</code></pre>
+
+  <h3 id="play-errors">4.2 错误分类与处理策略</h3>
+  <p>服务端返回的 <code>error</code> 字段为自然语言描述，客户端需匹配关键字进行分类处理。以下是经源码验证的错误分类表：</p>
+
+  <table>
+    <tr><th>error 关键字</th><th>含义</th><th>建议处理</th></tr>
+    <tr><td>cannot pass when leading</td><td>领出时不能 pass</td><td>重新选牌出</td></tr>
+    <tr><td>cannot beat</td><td>无法压过桌面牌</td><td>换一组能压的牌，或 pass</td></tr>
+    <tr><td>invalid</td><td>无效出牌（牌型不合法）</td><td>重新生成可行牌</td></tr>
+    <tr><td>already played</td><td>牌已出过</td><td>重新同步手牌后重试</td></tr>
+    <tr><td>duplicate</td><td>重复出牌</td><td>重新选牌</td></tr>
+    <tr><td>wrong turn</td><td>轮次错误</td><td>重新 check_game 同步状态</td></tr>
+    <tr><td>not your turn</td><td>不是你的回合</td><td>重新 check_game 同步状态</td></tr>
+    <tr><td>game over</td><td>对局已结束</td><td>终止本局</td></tr>
+    <tr><td>already finished</td><td>对局已结束</td><td>终止本局</td></tr>
+    <tr><td>not found</td><td>游戏不存在</td><td>终止本局</td></tr>
+    <tr><td>too many</td><td>出牌数量不对</td><td>重新选牌</td></tr>
+    <tr><td>card not in hand</td><td>牌不在手牌中</td><td>重新 check_game 同步手牌</td></tr>
+  </table>
+
+  <div class="note danger">
+    <strong>死循环防护：</strong>连续被拒 ≥6 次应强制重启对局。重试时务必重新 <code>check_game</code> 获取最新手牌和桌面状态，避免使用过期的本地缓存。
+  </div>
+</div>
+
+<!-- ════════ 5. rank ════════ -->
+<h2 id="rank">5. 排行榜 — GET /rank</h2>
+
+<div class="endpoint">
+  <div class="endpoint-header">
+    <span class="method PAGE">HTML</span>
+    <span class="path">/rank</span>
+  </div>
+  <p class="desc">返回排行榜 HTML 页面，无鉴权。需解析 HTML 提取排名数据。</p>
+
+  <h4>请求</h4>
+  <pre><code>GET http://183.175.14.145:8004/rank</code></pre>
+
+  <h4>HTML 结构</h4>
+  <pre><code>&lt;table&gt;
+  &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td&gt;0241123590&lt;/td&gt;&lt;td&gt;1850&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;2&lt;/td&gt;&lt;td&gt;user002&lt;/td&gt;&lt;td&gt;1820&lt;/td&gt;&lt;/tr&gt;
+  ...
+&lt;/table&gt;</code></pre>
+
+  <h4>解析正则</h4>
+  <pre><code>pattern = r'&lt;tr&gt;\s*&lt;td&gt;(\d+)&lt;/td&gt;\s*&lt;td&gt;(.*?)&lt;/td&gt;\s*&lt;td&gt;(\d+)&lt;/td&gt;\s*&lt;/tr&gt;'
+# 捕获组: (排名, 用户名, Elo)</code></pre>
+
+  <table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td>排名</td><td>int</td><td>名次（1 为最高）</td></tr>
+    <tr><td>用户名</td><td>string</td><td>用户标识</td></tr>
+    <tr><td>Elo</td><td>int</td><td>Elo 积分</td></tr>
+  </table>
+</div>
+
+<!-- ════════ 6. 生命周期 ════════ -->
+<h2 id="lifecycle">6. 对局生命周期</h2>
+
+<div class="protocol-flow">
+  <span class="flow-step highlight">POST /join_game</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">获取 game_id</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">GET /check_game</span>
+  <span class="flow-arrow">↻</span>
+  <span class="flow-step">轮询等待 started=true</span>
+</div>
+
+<div class="protocol-flow">
+  <span class="flow-step">started=true</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">GET /check_game</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">is_your_turn?</span>
+</div>
+
+<div class="protocol-flow">
+  <span class="flow-step" style="border-color:var(--green);color:var(--green)">YES</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step highlight">GET /play_game</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">is_success?</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">回到轮询</span>
+</div>
+
+<div class="protocol-flow">
+  <span class="flow-step" style="border-color:var(--red);color:var(--red)">NO</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">等待 1-5s</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">回到轮询</span>
+</div>
+
+<div class="protocol-flow">
+  <span class="flow-step">completed=true</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step highlight">对局结束</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">winner_team == your_team ?</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">胜/负</span>
+</div>
+
+<h4>典型时序</h4>
+<pre><code>客户端                          服务器
+  │                               │
+  │── POST /join_game ───────────→│  加入对局
+  │←── {"game_id": 18142} ───────│
+  │                               │
+  │── GET /check_game/18142/ ───→│  轮询（未开始）
+  │←── {"started": false, ...} ──│
+  │                               │
+  │   (等待 2-5 秒)                │
+  │                               │
+  │── GET /check_game/18142/ ───→│  轮询（已开始）
+  │←── {"started": true,          │
+  │      "is_your_turn": true,    │
+  │      "your_hand": [...], ...} │
+  │                               │
+  │── GET /play_game/18142/      │  出牌
+  │    ?coord=["S8"] ───────────→│
+  │←── {"is_success": true} ─────│
+  │                               │
+  │   (等待 1-2 秒，继续轮询)      │
+  │                               │
+  │   ... 循环出牌 ...             │
+  │                               │
+  │── GET /check_game/18142/ ───→│  轮询（结束）
+  │←── {"completed": true,        │
+  │      "winner_team": 0,        │
+  │      "ranking": [...], ...} ──│
+  │                               │</code></pre>
+
+<!-- ════════ 7. 牌面编码 ════════ -->
+<h2 id="card-format">7. 牌面编码规范</h2>
+
+<h3>普通牌</h3>
+<p>格式：<code>{花色}{点数}</code>，共 52 张。</p>
+<table>
+  <tr><th>花色</th><th>编码</th><th>说明</th></tr>
+  <tr><td>黑桃</td><td>S</td><td>Spade</td></tr>
+  <tr><td>红桃</td><td>H</td><td>Heart（红桃级牌为逢人配）</td></tr>
+  <tr><td>方块</td><td>D</td><td>Diamond</td></tr>
+  <tr><td>梅花</td><td>C</td><td>Club</td></tr>
+</table>
+<table>
+  <tr><th>点数</th><th>编码</th><th>排序值</th></tr>
+  <tr><td>2 ~ 9</td><td>2-9</td><td>0-7</td></tr>
+  <tr><td>10</td><td>T</td><td>8</td></tr>
+  <tr><td>杰克</td><td>J</td><td>9</td></tr>
+  <tr><td>皇后</td><td>Q</td><td>10</td></tr>
+  <tr><td>国王</td><td>K</td><td>11</td></tr>
+  <tr><td>王牌</td><td>A</td><td>12</td></tr>
+</table>
+
+<h3>特殊牌</h3>
+<table>
+  <tr><th>编码</th><th>名称</th><th>说明</th></tr>
+  <tr><td>B</td><td>小王</td><td>Black Joker</td></tr>
+  <tr><td>R</td><td>大王</td><td>Red Joker（最大单牌）</td></tr>
+</table>
+
+<h3>逢人配（Wild Card）</h3>
+<div class="note">
+  <strong>定义：</strong>红桃花色的当前级牌。例如级牌为 <code>"9"</code> 时，<code>H9</code> 即为逢人配，可替代任意牌组成合法牌型。
+</div>
+
+<h3>排序</h3>
+<p>牌面排序优先级（从小到大）：</p>
+<pre><code>普通牌(2~A) &lt; 级牌(4张) &lt; 小王(B) &lt; 大王(R)
+同点数: S &lt; H &lt; D &lt; C</code></pre>
+
+<h3>牌型类型</h3>
+<table>
+  <tr><th>类型</th><th>英文名</th><th>说明</th></tr>
+  <tr><td>单张</td><td>single</td><td>1 张</td></tr>
+  <tr><td>对子</td><td>pair</td><td>2 张同点数</td></tr>
+  <tr><td>三张</td><td>triple</td><td>3 张同点数</td></tr>
+  <tr><td>三带二</td><td>full_house</td><td>3+2（三张+对子）</td></tr>
+  <tr><td>顺子</td><td>straight</td><td>5+ 连续单张</td></tr>
+  <tr><td>连对</td><td>plate</td><td>3+ 连续对子</td></tr>
+  <tr><td>连三</td><td>steel</td><td>2+ 连续三张</td></tr>
+  <tr><td>炸弹</td><td>bomb</td><td>4+ 张同点数</td></tr>
+  <tr><td>同花顺</td><td>straight_flush</td><td>5+ 连续同花色</td></tr>
+  <tr><td>四大天王</td><td>quad_kings</td><td>B,B,R,R（最强炸弹）</td></tr>
+</table>
+
+<!-- ════════ 8. 错误处理 ════════ -->
+<h2 id="errors">8. 错误处理参考表</h2>
+
+<table>
+  <tr><th>场景</th><th>HTTP 状态</th><th>处理策略</th></tr>
+  <tr><td>密码错误 / 鉴权失败</td><td>非 200</td><td>终止，检查 config.cfg 中 rsa_e/rsa_n</td></tr>
+  <tr><td>game_id 不存在</td><td>200 + error: "not found"</td><td>重新 join_game</td></tr>
+  <tr><td>网络超时</td><td>无响应</td><td>重试（join 6次, check 5次, play 2次）</td></tr>
+  <tr><td>对局未开始</td><td>200 + started: false</td><td>等待 2-5s 后重新 check</td></tr>
+  <tr><td>非我方回合</td><td>200 + is_your_turn: false</td><td>等待 1-5s 后重新 check</td></tr>
+  <tr><td>出牌被拒</td><td>200 + is_success: false</td><td>按 error 关键字分类处理（见 4.2）</td></tr>
+  <tr><td>对局已完成</td><td>200 + completed: true</td><td>读取 winner_team 判断胜负</td></tr>
+  <tr><td>卡在开局阶段</td><td>200 + all hand_counts=27</td><td>等待 >5min 视为卡死，退出</td></tr>
+</table>
+
+<div class="note">
+  <strong>超时建议：</strong>单局超时设为 5-30 分钟。check_game 的 HTTP 超时设为 30s，play_game 设为 30-120s（服务端出牌确认有时较慢）。
+</div>
+
+</div>
+</body>
+</html>
